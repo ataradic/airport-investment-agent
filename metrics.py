@@ -1,48 +1,49 @@
-"""Raw metrics computed from airport records. Pure functions, no scaling."""
+"""Raw metrics computed from one airport record. Pure functions, no scaling."""
 import data
 
 
-def _years() -> int:
+def _years_between() -> int:
     meta = data.get_meta()
     return meta["latest_year"] - meta["base_year"]
 
 
-def passenger_cagr(a: dict) -> float:
+def passenger_cagr(airport: dict) -> float:
     """Compound annual growth of departing passengers, base year to latest complete year."""
-    return (a["pax_latest"] / a["pax_base"]) ** (1 / _years()) - 1
+    return (airport["pax_latest"] / airport["pax_base"]) ** (1 / _years_between()) - 1
 
 
-def seat_cagr(a: dict) -> float:
+def seat_cagr(airport: dict) -> float:
     """Compound annual growth of seat capacity."""
-    return (a["seats_latest"] / a["seats_base"]) ** (1 / _years()) - 1
+    return (airport["seats_latest"] / airport["seats_base"]) ** (1 / _years_between()) - 1
 
 
-def load_factor(a: dict) -> float:
+def load_factor(airport: dict) -> float:
     """Annual passengers divided by seats (congestion proxy)."""
-    return a["pax_latest"] / a["seats_latest"]
+    return airport["pax_latest"] / airport["seats_latest"]
 
 
-def peak_load_factor(a: dict) -> float:
+def peak_load_factor(airport: dict) -> float:
     """Highest monthly load factor in the latest year (peak-season stress proxy)."""
-    return a["peak_load_factor"]
+    return airport["peak_load_factor"]
 
 
-def stage_length(a: dict) -> float:
+def stage_length(airport: dict) -> float:
     """Departure-weighted average flight distance in statute miles (reach proxy)."""
-    return a["avg_stage_miles"]
+    return airport["avg_stage_miles"]
 
 
-def intl_departure_share(a: dict) -> float:
+def intl_departure_share(airport: dict) -> float:
     """Share of departures that are international."""
-    return a["intl_departure_share"]
+    return airport["intl_departure_share"]
 
 
-def demand_capacity_gap(a: dict) -> float:
+def demand_capacity_gap(airport: dict) -> float:
     """Passenger growth minus seat growth. Positive: demand is outpacing capacity."""
-    return passenger_cagr(a) - seat_cagr(a)
+    return passenger_cagr(airport) - seat_cagr(airport)
 
 
-RAW_METRICS = {
+# Metrics that feed the investment score, keyed by the names used in scoring.WEIGHTS.
+SCORED_METRICS = {
     "growth": passenger_cagr,
     "congestion": load_factor,
     "peak": peak_load_factor,
